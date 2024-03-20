@@ -1,7 +1,10 @@
 from config import API_KEY
+from loguru import logger
 import requests
 import telebot
 from bs4 import BeautifulSoup as b
+import datetime
+
 
 URL = 'https://bank.gov.ua/#4-novyny'
 
@@ -14,14 +17,22 @@ clear_news = [i.text.strip() for i in news]
 # for x in clear_news:
 #     print(x[])
 
+logger.add('log.txt', format="{time};{message} ")
+
 bot = telebot.TeleBot(API_KEY)
-@bot.message_handler(regexp='[а-яА-я]')  # commands=['Привет', 'привет', 'start(']) '
+@bot.message_handler(commands=['Привет', 'привет', 'start'])  #regexp='[а-яА-я]')
 def hello(message):
-    bot.send_message(message.chat.id, f"{message.from_user.full_name}, здравствуйте. Пора спать)")
+    # print(f'Start message - name: {message.from_user.full_name}, id: {message.from_user.id}, - {datetime.datetime.now()}')
+    logger.info(f"{message.from_user.full_name};{message.from_user.id};{message.text}")
+    bot.send_message(message.chat.id, f"{message.from_user.first_name}, здравствуйте. Пора спать)")
+
 
 
 @bot.message_handler(content_types=['text'])
 def speak(message):
+    logger.info(f"{message.from_user.full_name};{message.from_user.id};{message.text}")
+    # print(f'Other message - {message.text}, name: {message.from_user.full_name}, id: {message.from_user.id}, '
+    #       f'date: {datetime.date.fromtimestamp(message.date)} - datetime: {datetime.datetime.now()}')
     if message.text.lower() in '0123456789':
         # bot.send_message(message.chat.id, 'И все таки пора спать')
         bot.send_message(message.chat.id, f'И все таки пора спать. А для информации - твой ID: {message.from_user.id}')
