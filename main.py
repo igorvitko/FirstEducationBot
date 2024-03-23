@@ -13,6 +13,9 @@ def get_price_coin(coin: str) -> float:
 
     return price
 
+def get_rate_of_currency(currency: str) -> float:
+    pass
+
 
 bot = telebot.TeleBot(API_KEY)
 logger.add('log.txt', format="{time};{level};{message} ")
@@ -20,22 +23,59 @@ logger.add('log.txt', format="{time};{level};{message} ")
 def start(message):
     logger.info(f"{message.from_user.full_name};{message.from_user.id};{message.text}")
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
-    btn1 = types.KeyboardButton("Bitcoin <-> USD")
-    btn2 = types.KeyboardButton("Ethereum <-> USD")
+    btn1 = types.KeyboardButton("Курсы криптовалют")
+    btn2 = types.KeyboardButton("Курсы НБУ")
     markup.add(btn1, btn2)
     bot.send_message(message.from_user.id,
-                     text=f"{message.from_user.first_name}, здравствуйте. Курс какой монет интересует)",
-                     reply_markup=markup)
+                     text=f"<em><b>{message.from_user.first_name}</b>, здравствуйте. Выберите раздел, который Вас интересует</em>",
+                     reply_markup=markup, parse_mode='HTML')
 
+
+@bot.message_handler(context_types=['text'])
+def return_main_menu(message):
+    markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+    btn1 = types.KeyboardButton("Курсы криптовалют")
+    btn2 = types.KeyboardButton("Курсы НБУ")
+    markup.add(btn1, btn2)
+    bot.send_message(message.from_user.id,
+                     text=f"<em>Выберите раздел, который Вас интересует</em>", reply_markup=markup, parse_mode='HTML')
 
 
 @bot.message_handler(content_types=['text'])
 def speak(message):
     logger.info(f"{message.from_user.full_name};{message.from_user.id};{message.text}")
-    if message.text == "Bitcoin <-> USD":
+    if message.text == "Курсы криптовалют":
+        markup = types.ReplyKeyboardMarkup(resize_keyboard=True, row_width=2)
+        btn1 = types.KeyboardButton("Bitcoin <-> USD")
+        btn2 = types.KeyboardButton("Ethereum <-> USD")
+        btn3 = types.KeyboardButton("Возврат в главное меню")
+        markup.add(btn1, btn2, btn3)
+        bot.send_message(message.from_user.id,
+                         text=f"<em><b>{message.from_user.first_name}</b>, курс какой монеты интересует)</em>",
+                         reply_markup=markup, parse_mode='HTML')
+    elif message.text == "Bitcoin <-> USD":
         bot.send_message(message.from_user.id, f'По состоянию на {dt.datetime.now()} курс: {get_price_coin('BTCUSDT')}')
-    if message.text == "Ethereum <-> USD":
+    elif message.text == "Ethereum <-> USD":
         bot.send_message(message.from_user.id, f'По состоянию на {dt.datetime.now()} курс: {get_price_coin("ETHUSDT")}')
+    elif message.text == "Курсы НБУ":
+        markup = types.ReplyKeyboardMarkup(resize_keyboard=True, row_width=4)
+        btn1 = types.KeyboardButton("USD")
+        btn2 = types.KeyboardButton("EUR")
+        btn3 = types.KeyboardButton("CAD")
+        btn4 = types.KeyboardButton("PLN")
+        btn5 = types.KeyboardButton("Возврат в главное меню")
+        markup.add(btn1, btn2, btn3, btn4, btn5)
+        bot.send_message(message.from_user.id,
+                         text=f"{message.from_user.first_name}, курс какой валюты интересует)",
+                         reply_markup=markup)
+    elif message.text == "Курс USD":
+        bot.send_message(message.from_user.id, f'Раздел в разработке... Скоро будет')
+    elif message.text == "Курс EUR":
+        bot.send_message(message.from_user.id, f'Раздел в разработке... Скоро будет')
+    elif message.text == "Возврат в главное меню":
+        return_main_menu(message)
+    else:
+        bot.send_message(message.from_user.id, message.text)
     # if message.text.lower() in '0123456789':
     #     # bot.send_message(message.chat.id, 'И все таки пора спать')
     #     bot.send_message(message.chat.id, f'И все таки пора спать. А для информации - твой ID: {message.from_user.id}')
@@ -48,10 +88,14 @@ def speak(message):
     #     bot.send_message(message.chat.id, 'Введите любую цифру: ')
 
 
-bot.polling(non_stop=True)
+@bot.message_handler(content_types=['sticker', 'animation'])
+def sticker(message):
+    logger.debug(f"{message.from_user.full_name};{message.from_user.id};{message.text}")
+    bot.send_message(message.from_user.id, f"Вау! Какая картинка!")
 
+
+
+# bot.polling(non_stop=True)
 
 if __name__ == '__main__':
-    print('PyCharm')
-
-# See PyCharm help at https://www.jetbrains.com/help/pycharm/
+    bot.polling(non_stop=True)
