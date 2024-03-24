@@ -6,12 +6,20 @@ from telebot import types
 import datetime as dt
 
 
-def get_price_coin(coin: str) -> float:
-    url = 'https://api.binance.com/api/v3/ticker/price'
-    response = requests.get(url, params={'symbol': coin})
-    price = float(response.json()['price'])
+# def get_price_coin(coin: str) -> float:
+#     url = 'https://api.binance.com/api/v3/ticker/price'
+#     response = requests.get(url, params={'symbol': coin})
+#
+#     return float(response.json()["price"])
 
-    return price
+def get_price_coin(coin):
+    url = 'https://api.coinlore.net/api/ticker/'
+    response = requests.get(url, params={'id': coin})
+    price = response.json()[0]['price_usd']
+    price_change_24h = response.json()[0]['percent_change_24h']
+
+    return price, price_change_24h
+
 
 def get_rate_of_currency(currency: str) -> float:
     pass
@@ -19,7 +27,9 @@ def get_rate_of_currency(currency: str) -> float:
 
 bot = telebot.TeleBot(API_KEY)
 logger.add('log.txt', format="{time};{level};{message} ")
-@bot.message_handler(commands=['start'])  #regexp='[а-яА-я]')
+
+
+@bot.message_handler(commands=['start'])
 def start(message):
     logger.info(f"{message.from_user.full_name};{message.from_user.id};{message.text}")
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
@@ -54,9 +64,13 @@ def speak(message):
                          text=f"<em><b>{message.from_user.first_name}</b>, курс какой монеты интересует)</em>",
                          reply_markup=markup, parse_mode='HTML')
     elif message.text == "Bitcoin <-> USD":
-        bot.send_message(message.from_user.id, f'По состоянию на {dt.datetime.now()} курс: {get_price_coin('BTCUSDT')}')
+        bot.send_message(message.from_user.id, f"По состоянию на {dt.datetime.now()} \n "
+                                               f"курс: <b>{get_price_coin(90)[0]}</b>, "
+                                               f"измен. за 24 часа <b>{get_price_coin(90)[1]}</b>% ", parse_mode='HTML')
     elif message.text == "Ethereum <-> USD":
-        bot.send_message(message.from_user.id, f'По состоянию на {dt.datetime.now()} курс: {get_price_coin("ETHUSDT")}')
+        bot.send_message(message.from_user.id, f"По состоянию на {dt.datetime.now()} \n "
+                                               f"курс: <b>{get_price_coin(80)[0]}</b>, "
+                                               f"измен. за 24 часа <b>{get_price_coin(80)[1]}</b> %", parse_mode='HTML')
     elif message.text == "Курсы НБУ":
         markup = types.ReplyKeyboardMarkup(resize_keyboard=True, row_width=4)
         btn1 = types.KeyboardButton("USD")
@@ -91,11 +105,8 @@ def speak(message):
 @bot.message_handler(content_types=['sticker', 'animation'])
 def sticker(message):
     logger.debug(f"{message.from_user.full_name};{message.from_user.id};{message.text}")
-    bot.send_message(message.from_user.id, f"Вау! Какая картинка!")
+    bot.send_message(message.from_user.id, f"Вау! Какая картинка!  ❤️")
 
-
-
-# bot.polling(non_stop=True)
 
 if __name__ == '__main__':
     bot.polling(non_stop=True)
