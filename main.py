@@ -1,6 +1,7 @@
 from config import API_KEY
 from loguru import logger
 import requests
+import time
 import telebot
 from telebot import types
 import datetime as dt
@@ -118,4 +119,19 @@ def sticker(message):
 
 
 if __name__ == '__main__':
-    bot.polling(non_stop=True)
+    # ot.polling(none_stop=True, interval=2)
+    while True:
+        try:
+            logger.info(f"Bot running..")
+            bot.polling(none_stop=True, interval=2)
+
+            # Предполагаю, что бот может мирно завершить работу, поэтому
+            # даем выйти из цикла
+            break
+        except telebot.apihelper.ApiException as e:
+            logger.error(f"Bot has error: {e}")
+            bot.stop_polling()
+
+            time.sleep(5)
+
+            logger.info(f"Running again!")
