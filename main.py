@@ -8,25 +8,33 @@ from telebot import types
 import datetime as dt
 
 
-def get_price_coin(coin):
-    url = 'https://api.coinlore.net/api/ticker/'
-    response = requests.get(url, params={'id': coin})
-    price = response.json()[0]['price_usd']
-    price_change_24h = response.json()[0]['percent_change_24h']
+def get_final_answer_coins(*, coin_name: str) -> str:
+    """
 
-    return price, price_change_24h
+    :param coin_name: string name of coin
+    :return: string answer of info coin
+    """
 
-dict_val = {"USD": 840, "EUR": 978, "CAD": 124, "GBP": 826, "PLN": 985}
+    date = dt.datetime.today().strftime('%d-%m-%Y %H:%M')
+    phrase = (f'на {date}:\n'
+              f'{coin_name}\n'
+              f'Курс в USDT: {get_price_coin(coin_name=coin_name)[0]}\n'
+              f'изменения:\n'
+              f'- за 1 час: {get_price_coin(coin_name=coin_name)[1]} %\n'
+              f'- за 24 часа: {get_price_coin(coin_name=coin_name)[2]} %\n'
+              f'- за 7 дней: {get_price_coin(coin_name=coin_name)[3]} %')
+
+    return phrase
 
 
 def get_final_answer_rates(*, code: str) -> str:
     """
     func return final frase of answer a rates of choice currency
-    :param code: choice currency
+    :param code: code of currency
     :return: string of answer
     """
     date = dt.datetime.today().strftime('%d-%m-%Y %H:%M')
-    phrase = f'на {date}:\n\n'
+    phrase = f'на {date}:\n{code}\n'
     # курс НБУ
     phrase += f'Курс НБУ: {get_rate_nbu(valcode=code)[0]}\n'
 
@@ -78,22 +86,21 @@ def speak(message):
 
     # это блок криптовалют
     if message.text == "Курсы криптовалют":
-        markup = types.ReplyKeyboardMarkup(resize_keyboard=True, row_width=2)
-        btn1 = types.KeyboardButton("Bitcoin <-> USD")
-        btn2 = types.KeyboardButton("Ethereum <-> USD")
-        btn3 = types.KeyboardButton("Возврат в главное меню")
-        markup.add(btn1, btn2, btn3)
+        markup = types.ReplyKeyboardMarkup(resize_keyboard=True, row_width=3)
+        btn1 = types.KeyboardButton("BTC")
+        btn2 = types.KeyboardButton("ETH")
+        btn3 = types.KeyboardButton("TON")
+        btn4 = types.KeyboardButton("Возврат в главное меню")
+        markup.add(btn1, btn2, btn3, btn4)
         bot.send_message(message.from_user.id,
                          text=f"<em><b>{message.from_user.first_name}</b>, курс какой монеты интересует)</em>",
                          reply_markup=markup, parse_mode='HTML')
-    elif message.text == "Bitcoin <-> USD":
-        bot.send_message(message.from_user.id, f"По состоянию на {dt.datetime.now()} \n "
-                                               f"курс: <b>{get_price_coin(90)[0]}</b>, "
-                                               f"измен. за 24 часа <b>{get_price_coin(90)[1]}</b>% ", parse_mode='HTML')
-    elif message.text == "Ethereum <-> USD":
-        bot.send_message(message.from_user.id, f"По состоянию на {dt.datetime.now()} \n "
-                                               f"курс: <b>{get_price_coin(80)[0]}</b>, "
-                                               f"измен. за 24 часа <b>{get_price_coin(80)[1]}</b> %", parse_mode='HTML')
+    elif message.text == "BTC":
+        bot.send_message(message.from_user.id, f'{get_final_answer_coins(coin_name='BTC')}')
+    elif message.text == "ETH":
+        bot.send_message(message.from_user.id, f'{get_final_answer_coins(coin_name='ETH')}')
+    elif message.text == "TON":
+        bot.send_message(message.from_user.id, f'{get_final_answer_coins(coin_name='TON')}')
 
     # это блок курсов фиатных валют
     elif message.text == "Курсы валют":
@@ -119,16 +126,6 @@ def speak(message):
         return_main_menu(message)
     else:
         bot.send_message(message.from_user.id, message.text)
-    # if message.text.lower() in '0123456789':
-    #     # bot.send_message(message.chat.id, 'И все таки пора спать')
-    #     bot.send_message(message.chat.id, f'И все таки пора спать. А для информации - твой ID: {message.from_user.id}')
-    # elif message.text.lower() in '9876543210':
-    #     markup = telebot.types.InlineKeyboardMarkup()
-    #     btn1 = telebot.types.InlineKeyboardButton(text='Сайт НБУ', url='https://bank.gov.ua/')
-    #     markup.add(btn1)
-    #     bot.send_message(message.from_user.id, 'По кнопке ниже можно перейти на сайт НБУ', reply_markup=markup)
-    # else:
-    #     bot.send_message(message.chat.id, 'Введите любую цифру: ')
 
 
 @bot.message_handler(content_types=['sticker', 'animation'])
