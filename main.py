@@ -96,11 +96,11 @@ def speak(message):
                          text=f"<em><b>{message.from_user.first_name}</b>, курс какой монеты интересует)</em>",
                          reply_markup=markup, parse_mode='HTML')
     elif message.text == "BTC":
-        bot.send_message(message.from_user.id, f'{get_final_answer_coins(coin_name='BTC')}')
+        bot.send_message(message.from_user.id, f'{get_final_answer_coins(coin_name="BTC")}')
     elif message.text == "ETH":
-        bot.send_message(message.from_user.id, f'{get_final_answer_coins(coin_name='ETH')}')
+        bot.send_message(message.from_user.id, f'{get_final_answer_coins(coin_name="ETH")}')
     elif message.text == "TON":
-        bot.send_message(message.from_user.id, f'{get_final_answer_coins(coin_name='TON')}')
+        bot.send_message(message.from_user.id, f'{get_final_answer_coins(coin_name="TON")}')
 
     # это блок курсов фиатных валют
     elif message.text == "Курсы валют":
@@ -115,13 +115,13 @@ def speak(message):
                          text=f"{message.from_user.first_name}, курс какой валюты интересует)",
                          reply_markup=markup)
     elif message.text == "🇺🇸 USD":
-        bot.send_message(message.from_user.id, f'{get_final_answer_rates(code='USD')}')
+        bot.send_message(message.from_user.id, f'{get_final_answer_rates(code="USD")}')
     elif message.text == "🇪🇺 EUR":
-        bot.send_message(message.from_user.id, f'{get_final_answer_rates(code='EUR')}')
+        bot.send_message(message.from_user.id, f'{get_final_answer_rates(code="EUR")}')
     elif message.text == "🇨🇦 CAD":
-        bot.send_message(message.from_user.id, f'{get_final_answer_rates(code='CAD')}')
+        bot.send_message(message.from_user.id, f'{get_final_answer_rates(code="CAD")}')
     elif message.text == "🇬🇧 GBP":
-        bot.send_message(message.from_user.id, f'{get_final_answer_rates(code='CAD')}')
+        bot.send_message(message.from_user.id, f'{get_final_answer_rates(code="GBP")}')
     elif message.text == "Возврат в главное меню":
         return_main_menu(message)
     else:
