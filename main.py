@@ -120,6 +120,9 @@ def sticker(message):
 
 if __name__ == '__main__':
     # ot.polling(none_stop=True, interval=2)
+
+    # bot.infinity_polling(timeout=10, long_polling_timeout=5)
+
     while True:
         try:
             logger.info(f"Bot running..")
@@ -128,7 +131,11 @@ if __name__ == '__main__':
             # Предполагаю, что бот может мирно завершить работу, поэтому
             # даем выйти из цикла
             break
-        except telebot.apihelper.ApiException as e:
+        except telebot.apihelper.ApiTelegramException as e:
+            # requests.exceptions.ReadTimeout: HTTPSConnectionPool(host='api.telegram.org', port=443): Read
+            # timed
+            # out.(read
+            # timeout = 25)
             logger.error(f"Bot has error: {e}")
             bot.stop_polling()
 
