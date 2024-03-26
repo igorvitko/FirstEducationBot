@@ -8,8 +8,6 @@ from telebot import types
 import datetime as dt
 
 
-dict_val = {"USD": 840, "EUR": 978, "CAD": 124, "GBP": 826, "PLN": 985}
-
 def get_price_coin(coin):
     url = 'https://api.coinlore.net/api/ticker/'
     response = requests.get(url, params={'id': coin})
@@ -18,33 +16,34 @@ def get_price_coin(coin):
 
     return price, price_change_24h
 
+dict_val = {"USD": 840, "EUR": 978, "CAD": 124, "GBP": 826, "PLN": 985}
 
-def get_final_answer_rates(valcode: str) -> str:
+
+def get_final_answer_rates(*, code: str) -> str:
     """
     func return final frase of answer a rates of choice currency
-    :param valcode: choice currency
+    :param code: choice currency
     :return: string of answer
     """
-    pass
+    date = dt.datetime.today().strftime('%d-%m-%Y %H:%M')
+    phrase = f'на {date}:\n\n'
+    # курс НБУ
+    phrase += f'Курс НБУ: {get_rate_nbu(valcode=code)[0]}\n'
 
-def get_rate_of_currency(currency: str) -> str:
-    """
-    функция получения курсов валют от монобанка, приват банка и официального курса НБУ
-    :param currency:
-    :return:
-    """
-    url = 'https://api.monobank.ua/bank/currency'
-    response = requests.get(url)
-    answer = response.json()
-    for dic in answer:
-        if dic['currencyCodeA'] == currency and dic['currencyCodeB'] == 980:
-            rate_buy = dic.get('rateBuy')
-            rate_sell = dic.get('rateSell')
-            rate_cross = dic.get('rateCross')
+    # курс монобанка
+    if get_rate_mono(valcode=code)[2] is None:
+        phrase += f'Курс Монобанка (карты): {get_rate_mono(valcode=code)[0]} - {get_rate_mono(valcode=code)[1]}\n'
+    else:
+        phrase += f'Курс Монобанка (кросс): {get_rate_mono(valcode=code)[2]}\n'
 
-    if rate_cross:
-        return f'Кросс-курс  - {rate_cross} грн'
-    return f'Курс обмена (грн): {rate_buy} - {rate_sell}'
+    # курс приватбанка
+    if get_rate_privat_cash(valcode=code) or get_rate_privat_cards(valcode=code):
+        phrase += f'Курс Приватбанка (касса): {get_rate_privat_cash(valcode=code)[0]} - {get_rate_privat_cash(valcode=code)[1]}\n'
+        phrase += f'Курс Приватбанка (карты): {get_rate_privat_cards(valcode=code)[0]} - {get_rate_privat_cards(valcode=code)[1]}'
+    else:
+        phrase += f'Курсы Приватбанка отсутствуют'
+
+    return phrase
 
 
 bot = telebot.TeleBot(API_KEY)
@@ -109,13 +108,13 @@ def speak(message):
                          text=f"{message.from_user.first_name}, курс какой валюты интересует)",
                          reply_markup=markup)
     elif message.text == "🇺🇸 USD":
-        bot.send_message(message.from_user.id, f'{get_rate_of_currency(840)}')
+        bot.send_message(message.from_user.id, f'{get_final_answer_rates(code='USD')}')
     elif message.text == "🇪🇺 EUR":
-        bot.send_message(message.from_user.id, f'{get_rate_of_currency(978)}')
+        bot.send_message(message.from_user.id, f'{get_final_answer_rates(code='EUR')}')
     elif message.text == "🇨🇦 CAD":
-        bot.send_message(message.from_user.id, f'{get_rate_of_currency(124)}')
+        bot.send_message(message.from_user.id, f'{get_final_answer_rates(code='CAD')}')
     elif message.text == "🇬🇧 GBP":
-        bot.send_message(message.from_user.id, f'{get_rate_of_currency(826)}')
+        bot.send_message(message.from_user.id, f'{get_final_answer_rates(code='CAD')}')
     elif message.text == "Возврат в главное меню":
         return_main_menu(message)
     else:
@@ -139,7 +138,7 @@ def sticker(message):
 
 
 if __name__ == '__main__':
-    # ot.polling(none_stop=True, interval=2)
+    # bot.polling(none_stop=True, interval=2)
     while True:
         try:
             logger.info(f"Bot running..")

@@ -3,7 +3,7 @@ from datetime import date
 
 dict_val = {"USD": 840, "EUR": 978, "CAD": 124, "GBP": 826, "PLN": 985}
 
-def get_rate_nbu(valcode: str) -> list[float]:
+def get_rate_nbu(*, valcode: str) -> list[float]:
     date_start = date_end = date.today().strftime('%Y%m%d')
     # dict_val = {840: 'USD', 978: 'EUR', 124: 'CAD'}
     url = (f'https://bank.gov.ua/NBU_Exchange/exchange_site?start={date_start}&end={date_end}&'
@@ -13,7 +13,7 @@ def get_rate_nbu(valcode: str) -> list[float]:
     return [data['rate']]
 
 
-def get_rate_mono(valcode: str) -> list[float]:
+def get_rate_mono(*, valcode: str) -> list[float]:
     url='https://api.monobank.ua/bank/currency'
     response = requests.get(url)
     answer = response.json()
@@ -26,7 +26,7 @@ def get_rate_mono(valcode: str) -> list[float]:
     return [rate_buy, rate_sell, rate_cross]
 
 
-def get_rate_privat_cash(valcode: str) -> list[float]:
+def get_rate_privat_cash(*, valcode: str) -> list[float]:
     # dict_val = {840: 'USD', 978: 'EUR'}
     url_cash = 'https://api.privatbank.ua/p24api/pubinfo?json&exchange&coursid=5'
     response_cash = requests.get(url_cash)
@@ -36,7 +36,7 @@ def get_rate_privat_cash(valcode: str) -> list[float]:
             return [item['buy'], item['sale']]
 
 
-def get_rate_privat_cards(valcode: str) -> list[float]:
+def get_rate_privat_cards(*, valcode: str) -> list[float]:
     # dict_val = {840: 'USD', 978: 'EUR'}
     url_trans = 'https://api.privatbank.ua/p24api/pubinfo?exchange&json&coursid=11'
     response_trans = requests.get(url_trans)
