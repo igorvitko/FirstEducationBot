@@ -1,4 +1,6 @@
-from config import API_KEY
+from telebot.types import Message
+
+from config import *
 from functions import *
 from loguru import logger
 import requests
@@ -6,6 +8,7 @@ import time
 import telebot
 from telebot import types
 import datetime as dt
+import json
 
 
 def get_final_answer_coins(*, coin_name: str) -> str:
@@ -55,12 +58,29 @@ def get_final_answer_rates(*, code: str) -> str:
 
 
 bot = telebot.TeleBot(API_KEY)
-logger.add('log.txt', format="{time};{level};{message} ")
+logger.add(logger_path, format="{time};{level};{message} ")
 
 
 @bot.message_handler(commands=['start'])
-def start(message):
+def start(message: Message):
     logger.info(f"{message.from_user.full_name};{message.from_user.id};{message.text}")
+
+    with open(users_path, 'r') as f:
+        data_from_json = json.load(f)
+
+    user_id = message.from_user.id
+    user_name = message.from_user.full_name
+    if str(user_id) not in data_from_json:
+        data_from_json[user_id] = {"user_name": user_name}
+
+        with open(users_path, 'w') as f:
+            json.dump(data_from_json, f, indent=4, ensure_ascii=False)
+
+        bot.reply_to(message=message, text=f"{user_name}, Вы зарегистрированы!\n"
+                                       f"Ваш user_id: {user_id}")
+
+        logger.info(f"User {user_name};{user_id}; was registrated!")
+
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
     btn1 = types.KeyboardButton("Курсы криптовалют")
     btn2 = types.KeyboardButton("Курсы валют")
@@ -147,7 +167,8 @@ if __name__ == '__main__':
             # Предполагаю, что бот может мирно завершить работу, поэтому
             # даем выйти из цикла
             break
-        except telebot.apihelper.ApiTelegramException as e:
+        # except telebot.apihelper.ApiTelegramException as e:
+        except Exception as e:
             # requests.exceptions.ReadTimeout: HTTPSConnectionPool(host='api.telegram.org', port=443): Read
             # timed
             # out.(read
