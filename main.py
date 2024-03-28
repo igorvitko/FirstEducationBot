@@ -1,12 +1,12 @@
-from telebot.types import Message
-
 from config import *
 from functions import *
+from my_classses import *
 from loguru import logger
 import requests
 import time
 import telebot
 from telebot import types
+from telebot.types import Message
 import datetime as dt
 import json
 
@@ -57,7 +57,9 @@ def get_final_answer_rates(*, code: str) -> str:
     return phrase
 
 
-bot = telebot.TeleBot(API_KEY)
+telegram_client = TelegramClient(API_KEY, base_url=BASE_URL)
+bot = MyBot(token=API_KEY, telegram_client=telegram_client)
+
 logger.add(logger_path, format="{time};{level};{message} ")
 
 
@@ -171,6 +173,10 @@ if __name__ == '__main__':
 
     # bot.infinity_polling(timeout=10, long_polling_timeout=5)
 
+    def create_err_message(err):
+        return f"{dt.datetime.now()}:::\n{err.__class__}:::\n{err}"
+
+
     while True:
         try:
             logger.info(f"Bot running..")
@@ -180,12 +186,15 @@ if __name__ == '__main__':
             # даем выйти из цикла
             break
         # except telebot.apihelper.ApiTelegramException as e:
-        except Exception as e:
-            # requests.exceptions.ReadTimeout: HTTPSConnectionPool(host='api.telegram.org', port=443): Read
-            # timed
-            # out.(read
-            # timeout = 25)
-            logger.error(f"Bot has error: {e}")
+        except Exception as err:
+            # requests.exceptions.ReadTimeout: HTTPSConnectionPool(host='api.telegram.org', port=443):
+            # Read timed out.(read timeout = 25)
+            logger.error(f"Bot has error: {err.__class__}:::{err}")
+            bot.telegram_client.post(method="sendMessage", params={'chat_id': ADMIN_ID,
+                                                                 "text": create_err_message(err)})
+
+            # requests.post(f"https://api.telegram.org/bot{API_KEY}/"
+            #               f"sendMessage?chat_id=228927462&text={dt.datetime.now()}:::{err.__class__}:::{e}")
             bot.stop_polling()
 
             time.sleep(5)

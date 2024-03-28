@@ -1,4 +1,7 @@
 API_KEY = [you token]
+ADMIN_ID = [id chat of admin]
+BASE_URL = "https://api.telegram.org"
+
 
 logger_path = [path to logging file, example: log.txt]
 
