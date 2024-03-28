@@ -166,6 +166,7 @@ def sticker(message):
 
 
 if __name__ == '__main__':
+
     # bot.polling(none_stop=True, interval=2)
 
     # bot.infinity_polling(timeout=10, long_polling_timeout=5)
