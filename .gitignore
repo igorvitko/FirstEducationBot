@@ -3,3 +3,4 @@
 .idea
 .venv
 /log.txt
+/first_step_by_bot.py
