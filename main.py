@@ -86,8 +86,19 @@ def start(message: Message):
     btn2 = types.KeyboardButton("Курсы валют")
     markup.add(btn1, btn2)
     bot.send_message(message.from_user.id,
-                     text=f"<em><b>{message.from_user.first_name}</b>, здравствуйте. Выберите раздел, который Вас интересует</em>",
+                     text=f"<em><b>{message.from_user.first_name}</b>, здравствуйте. Выберите раздел, "
+                          f"который Вас интересует</em>",
                      reply_markup=markup, parse_mode='HTML')
+
+@bot.message_handler(commands=["help"])
+def help_content(message: Message):
+    bot.send_message(message.from_user.id, text="Это бот умеет искать и предоставлять информацию.\n\n"
+                                                "1. Курсы валют от банков:\n"
+                                                "НБУ https://bank.gov.ua/ua/markets/exchangerates,\n"
+                                                "Монобанка https://www.monobank.ua/?lang=uk,\n"
+                                                "Приватбанка https://privatbank.ua/ \n\n"
+                                                "2. Котировки некоторых монет "
+                                                "криптовалют от CoinLore https://www.coinlore.com/", disable_web_page_preview=True)
 
 
 @bot.message_handler(context_types=['text'])
