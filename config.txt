@@ -1,0 +1,5 @@
+API_KEY = [you token]
+
+logger_path = [path to logging file, example: log.txt]
+
+user_path = [path to json file, example: users.json]
