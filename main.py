@@ -1,31 +1,34 @@
-from config import *
-from functions import *
-from my_classses import *
-from loguru import logger
-import requests
 import time
-import telebot
+import json
+import datetime as dt
+
+import requests
+from loguru import logger
 from telebot import types
 from telebot.types import Message
-import datetime as dt
-import json
+
+from config import API_KEY, ADMIN_ID, BASE_URL
+from functions import *
+from my_classses import *
+
+import telebot
 
 
 def get_final_answer_coins(*, coin_name: str) -> str:
     """
-
     :param coin_name: string name of coin
     :return: string answer of info coin
     """
 
-    date = dt.datetime.today().strftime('%d-%m-%Y %H:%M')
-    phrase = (f'на {date}:\n'
+    cur_date = dt.datetime.today().strftime('%d-%m-%Y %H:%M:%S')
+    price_coin = get_price_coin(coin_name=coin_name)
+    phrase = (f'на {cur_date}:\n'
               f'{coin_name}\n'
-              f'Курс в USDT: {get_price_coin(coin_name=coin_name)[0]}\n'
+              f'Курс в USDT: {price_coin[0]}\n'
               f'изменения:\n'
-              f'- за 1 час: {get_price_coin(coin_name=coin_name)[1]} %\n'
-              f'- за 24 часа: {get_price_coin(coin_name=coin_name)[2]} %\n'
-              f'- за 7 дней: {get_price_coin(coin_name=coin_name)[3]} %')
+              f'- за 1 час: {price_coin[1]} %\n'
+              f'- за 24 часа: {price_coin[2]} %\n'
+              f'- за 7 дней: {price_coin[3]} %')
 
     return phrase
 
@@ -36,21 +39,28 @@ def get_final_answer_rates(*, code: str) -> str:
     :param code: code of currency
     :return: string of answer
     """
-    date = dt.datetime.today().strftime('%d-%m-%Y %H:%M')
-    phrase = f'на {date}:\n{code}\n'
-    # курс НБУ
-    phrase += f'Курс НБУ: {get_rate_nbu(valcode=code)[0]}\n'
+    cur_date = dt.datetime.today().strftime('%d-%m-%Y %H:%M:%S')
+    # получаем курсы НБУ
+    rate_nbu = get_rate_nbu(valcode=code)
+    # получаем курсы монобанка
+    rate_mono = get_rate_mono(valcode=code)
+    # получаем курсы приватбанка
+    rate_privat_cash = get_rate_privat_cash(valcode=code)
+    rate_privat_card = get_rate_privat_cards(valcode=code)
 
-    # курс монобанка
-    if get_rate_mono(valcode=code)[2] is None:
-        phrase += f'Курс Монобанка (карты): {get_rate_mono(valcode=code)[0]} - {get_rate_mono(valcode=code)[1]}\n'
+    # формируем финальное сообщение
+    phrase = f'на {cur_date}:\nВалюта - {code}\n'
+    # добавляем курс НБУ
+    phrase += f'Курс НБУ: {rate_nbu[0]}\n'
+    # добавляем курс монобанка
+    if rate_mono[2] is None:
+        phrase += f'Курс Монобанка (карты): {rate_mono[0]} - {rate_mono[1]}\n'
     else:
-        phrase += f'Курс Монобанка (кросс): {get_rate_mono(valcode=code)[2]}\n'
-
-    # курс приватбанка
-    if get_rate_privat_cash(valcode=code) or get_rate_privat_cards(valcode=code):
-        phrase += f'Курс Приватбанка (касса): {get_rate_privat_cash(valcode=code)[0]} - {get_rate_privat_cash(valcode=code)[1]}\n'
-        phrase += f'Курс Приватбанка (карты): {get_rate_privat_cards(valcode=code)[0]} - {get_rate_privat_cards(valcode=code)[1]}'
+        phrase += f'Курс Монобанка (кросс): {rate_mono[2]}\n'
+    # добавляем курсы приватбанка
+    if rate_privat_cash or rate_privat_card:
+        phrase += f'Курс Приватбанка (касса): {rate_privat_cash[0]} - {rate_privat_cash[1]}\n'
+        phrase += f'Курс Приватбанка (карты): {rate_privat_card[0]} - {rate_privat_card[1]}'
     else:
         phrase += f'Курсы Приватбанка отсутствуют'
 
@@ -164,7 +174,8 @@ def speak(message):
 @bot.message_handler(content_types=['sticker', 'animation'])
 def sticker(message):
     logger.debug(f"{message.from_user.full_name};{message.from_user.id};{message.text}")
-    bot.send_message(message.from_user.id, f"Вау! Какая картинка!  ❤️")
+    # bot.send_message(message.from_user.id, f"Вау! Какая картинка!  ❤️")
+    bot.reply_to(message, f"Вау! Какая картинка!  ❤️")
 
 
 if __name__ == '__main__':
