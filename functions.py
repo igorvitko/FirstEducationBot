@@ -1,6 +1,33 @@
 import requests
 from datetime import date
 
+from bs4 import BeautifulSoup
+
+
+def get_rate_wholesale(valcode: str) -> list[float]:
+    headers = {
+        "Accept": "*/*",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) "
+                      "Chrome/123.0.0.0 Safari/537.36"
+    }
+    currency_dict = {
+        "USD": "/usd-uah",
+        "EUR": "/eur-uah",
+        "GBP": "/gbp-uah"
+    }
+    url_local = f"https://obmenka.od.ua{currency_dict[valcode]}"
+    src = requests.get(url_local, headers=headers).text
+
+    soap = BeautifulSoup(src, "lxml")
+
+    rate_buy_wholesale = float((soap.find("li", attrs={"data-title":"Покупка"}).find(class_="pair__block-wholesale").
+                          find(class_="pair__block-num").text))
+    rate_sale_wholesale = float((soap.find("li", attrs={"data-title":"Продажа"}).find(class_="pair__block-wholesale").
+                           find(class_="pair__block-num").text))
+
+    return [rate_buy_wholesale, rate_sale_wholesale]
+
+
 def get_rate_nbu(*, valcode: str) -> list[float]:
     date_start = date_end = date.today().strftime('%Y%m%d')
     url = (f'https://bank.gov.ua/NBU_Exchange/exchange_site?start={date_start}&end={date_end}&'

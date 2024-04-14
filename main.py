@@ -33,12 +33,16 @@ def get_final_answer_coins(*, coin_name: str) -> str:
     return phrase
 
 
-def get_final_answer_rates(*, code: str) -> str:
+def get_final_answer_rates(*, code: str, message: Message) -> str:
     """
     func return final frase of answer a rates of choice currency
     :param code: code of currency
+    :param message: message
     :return: string of answer
     """
+
+    mes_id_del = bot.send_message(message.from_user.id, text="Подождите, формируется ответ....").id
+
     cur_date = dt.datetime.today().strftime('%d-%m-%Y %H:%M:%S')
     # получаем курсы НБУ
     rate_nbu = get_rate_nbu(valcode=code)
@@ -47,22 +51,31 @@ def get_final_answer_rates(*, code: str) -> str:
     # получаем курсы приватбанка
     rate_privat_cash = get_rate_privat_cash(valcode=code)
     rate_privat_card = get_rate_privat_cards(valcode=code)
+    # получаем оптовые курсы обмена
+    if code == "USD" or code == "EUR":
+        rate_kit = get_rate_wholesale(valcode=code)
 
     # формируем финальное сообщение
-    phrase = f'на {cur_date}:\nВалюта - {code}\n'
+    phrase = f'на {cur_date}:\nКурс валюты {code}:\n'
     # добавляем курс НБУ
-    phrase += f'Курс НБУ: {rate_nbu[0]}\n'
+    phrase += f'- НБУ: {rate_nbu[0]}\n'
     # добавляем курс монобанка
     if rate_mono[2] is None:
-        phrase += f'Курс Монобанка (карты): {rate_mono[0]} - {rate_mono[1]}\n'
+        phrase += f'- Монобанк (карты): {rate_mono[0]} - {rate_mono[1]}\n'
     else:
-        phrase += f'Курс Монобанка (кросс): {rate_mono[2]}\n'
+        phrase += f'- Монобанк (кросс): {rate_mono[2]}\n'
     # добавляем курсы приватбанка
     if rate_privat_cash or rate_privat_card:
-        phrase += f'Курс Приватбанка (касса): {rate_privat_cash[0]} - {rate_privat_cash[1]}\n'
-        phrase += f'Курс Приватбанка (карты): {rate_privat_card[0]} - {rate_privat_card[1]}'
+        phrase += f'- Приватбанк (касса): {rate_privat_cash[0]} - {rate_privat_cash[1]}\n'
+        phrase += f'- Приватбанк (карты): {rate_privat_card[0]} - {rate_privat_card[1]}'
     else:
         phrase += f'Курсы Приватбанка отсутствуют'
+
+    # добавляем оптовые курсы, только для USD и EUR
+    if code == "USD" or code == "EUR":
+        phrase += f"\n- Оптовый обменник: {rate_kit[0]} - {rate_kit[1]} "
+
+    bot.delete_message(message.chat.id, mes_id_del)
 
     return phrase
 
@@ -158,13 +171,13 @@ def speak(message):
                          text=f"{message.from_user.first_name}, курс какой валюты интересует)",
                          reply_markup=markup)
     elif message.text == "🇺🇸 USD":
-        bot.send_message(message.from_user.id, f'{get_final_answer_rates(code="USD")}')
+        bot.send_message(message.from_user.id, f'{get_final_answer_rates(code="USD", message=message)}')
     elif message.text == "🇪🇺 EUR":
-        bot.send_message(message.from_user.id, f'{get_final_answer_rates(code="EUR")}')
+        bot.send_message(message.from_user.id, f'{get_final_answer_rates(code="EUR", message=message)}')
     elif message.text == "🇨🇦 CAD":
-        bot.send_message(message.from_user.id, f'{get_final_answer_rates(code="CAD")}')
+        bot.send_message(message.from_user.id, f'{get_final_answer_rates(code="CAD", message=message)}')
     elif message.text == "🇬🇧 GBP":
-        bot.send_message(message.from_user.id, f'{get_final_answer_rates(code="GBP")}')
+        bot.send_message(message.from_user.id, f'{get_final_answer_rates(code="GBP", message=message)}')
     elif message.text == "Возврат в главное меню":
         return_main_menu(message)
     else:
