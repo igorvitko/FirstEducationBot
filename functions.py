@@ -20,10 +20,10 @@ def get_rate_wholesale(valcode: str) -> list[float]:
 
     soap = BeautifulSoup(src, "lxml")
 
-    rate_buy_wholesale = float((soap.find("li", attrs={"data-title":"Покупка"}).find(class_="pair__block-wholesale").
-                          find(class_="pair__block-num").text))
-    rate_sale_wholesale = float((soap.find("li", attrs={"data-title":"Продажа"}).find(class_="pair__block-wholesale").
-                           find(class_="pair__block-num").text))
+    rate_buy_wholesale = float(soap.find("li", attrs={"data-title":"Покупка"}).
+                               find(class_="pair__block-wholesale").find(class_="pair__block-num").text)
+    rate_sale_wholesale = float(soap.find("li", attrs={"data-title":"Продажа"}).
+                                find(class_="pair__block-wholesale").find(class_="pair__block-num").text)
 
     return [rate_buy_wholesale, rate_sale_wholesale]
 

@@ -2,7 +2,6 @@ import time
 import json
 import datetime as dt
 
-import requests
 from loguru import logger
 from telebot import types
 from telebot.types import Message
@@ -11,9 +10,19 @@ from config import API_KEY, ADMIN_ID, BASE_URL
 from functions import *
 from my_classses import *
 
-import telebot
+
+def decorator_wait_requests(func):
+    def wrapper(message, *arg, **kwargs):
+        mess_del_id = bot.send_message(message.from_user.id, text="Секунду терпения...").id
+        result = func(*arg, **kwargs)
+        bot.delete_message(message.chat.id, mess_del_id)
+
+        return result
+
+    return wrapper
 
 
+@decorator_wait_requests
 def get_final_answer_coins(*, coin_name: str) -> str:
     """
     :param coin_name: string name of coin
@@ -33,15 +42,14 @@ def get_final_answer_coins(*, coin_name: str) -> str:
     return phrase
 
 
-def get_final_answer_rates(*, code: str, message: Message) -> str:
+@decorator_wait_requests
+def get_final_answer_rates(*, code: str) -> str:
     """
     func return final frase of answer a rates of choice currency
     :param code: code of currency
     :param message: message
     :return: string of answer
     """
-
-    mes_id_del = bot.send_message(message.from_user.id, text="Подождите, формируется ответ....").id
 
     cur_date = dt.datetime.today().strftime('%d-%m-%Y %H:%M:%S')
     # получаем курсы НБУ
@@ -74,8 +82,6 @@ def get_final_answer_rates(*, code: str, message: Message) -> str:
     # добавляем оптовые курсы, только для USD и EUR
     if code == "USD" or code == "EUR":
         phrase += f"\n- Оптовый обменник: {rate_kit[0]} - {rate_kit[1]} "
-
-    bot.delete_message(message.chat.id, mes_id_del)
 
     return phrase
 
@@ -115,6 +121,7 @@ def start(message: Message):
                           f"который Вас интересует</em>",
                      reply_markup=markup, parse_mode='HTML')
 
+
 @bot.message_handler(commands=["help"])
 def help_content(message: Message):
     bot.send_message(message.from_user.id, text="Это бот умеет искать и предоставлять информацию.\n\n"
@@ -123,7 +130,8 @@ def help_content(message: Message):
                                                 "Монобанка https://www.monobank.ua/?lang=uk,\n"
                                                 "Приватбанка https://privatbank.ua/ \n\n"
                                                 "2. Котировки некоторых монет "
-                                                "криптовалют от CoinLore https://www.coinlore.com/", disable_web_page_preview=True)
+                                                "криптовалют от CoinLore https://www.coinlore.com/",
+                     disable_web_page_preview=True)
 
 
 @bot.message_handler(context_types=['text'])
@@ -152,11 +160,11 @@ def speak(message):
                          text=f"<em><b>{message.from_user.first_name}</b>, курс какой монеты интересует)</em>",
                          reply_markup=markup, parse_mode='HTML')
     elif message.text == "BTC":
-        bot.send_message(message.from_user.id, f'{get_final_answer_coins(coin_name="BTC")}')
+        bot.send_message(message.from_user.id, f'{get_final_answer_coins(coin_name="BTC", message=message)}')
     elif message.text == "ETH":
-        bot.send_message(message.from_user.id, f'{get_final_answer_coins(coin_name="ETH")}')
+        bot.send_message(message.from_user.id, f'{get_final_answer_coins(coin_name="ETH", message=message)}')
     elif message.text == "TON":
-        bot.send_message(message.from_user.id, f'{get_final_answer_coins(coin_name="TON")}')
+        bot.send_message(message.from_user.id, f'{get_final_answer_coins(coin_name="TON", message=message)}')
 
     # это блок курсов фиатных валют
     elif message.text == "Курсы валют":

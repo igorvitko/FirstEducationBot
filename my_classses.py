@@ -4,6 +4,7 @@ import telebot
 from config import *
 from telebot import TeleBot
 
+
 class TelegramClient:
     def __init__(self, token: str, base_url: str):
         self.token = token
