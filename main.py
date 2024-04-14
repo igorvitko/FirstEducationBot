@@ -60,7 +60,7 @@ def get_final_answer_rates(*, code: str) -> str:
     rate_privat_cash = get_rate_privat_cash(valcode=code)
     rate_privat_card = get_rate_privat_cards(valcode=code)
     # получаем оптовые курсы обмена
-    if code == "USD" or code == "EUR":
+    if code == "USD" or code == "EUR" or code == "GBP":
         rate_kit = get_rate_wholesale(valcode=code)
 
     # формируем финальное сообщение
@@ -69,7 +69,7 @@ def get_final_answer_rates(*, code: str) -> str:
     phrase += f'- НБУ: {rate_nbu[0]}\n'
     # добавляем курс монобанка
     if rate_mono[2] is None:
-        phrase += f'- Монобанк (карты): {rate_mono[0]} - {rate_mono[1]}\n'
+        phrase += f'- Монобанк (карты): {rate_mono[0]:.4f} - {rate_mono[1]:.4f}\n'
     else:
         phrase += f'- Монобанк (кросс): {rate_mono[2]}\n'
     # добавляем курсы приватбанка
@@ -80,8 +80,8 @@ def get_final_answer_rates(*, code: str) -> str:
         phrase += f'Курсы Приватбанка отсутствуют'
 
     # добавляем оптовые курсы, только для USD и EUR
-    if code == "USD" or code == "EUR":
-        phrase += f"\n- Оптовый обменник: {rate_kit[0]} - {rate_kit[1]} "
+    if code == "USD" or code == "EUR" or code == "GBP":
+        phrase += f"\n- Оптовый обменник: {rate_kit[0]:.4f} - {rate_kit[1]:.4f} "
 
     return phrase
 
@@ -225,8 +225,6 @@ if __name__ == '__main__':
             bot.telegram_client.post(method="sendMessage", params={'chat_id': ADMIN_ID,
                                                                  "text": create_err_message(err)})
 
-            # requests.post(f"https://api.telegram.org/bot{API_KEY}/"
-            #               f"sendMessage?chat_id=228927462&text={dt.datetime.now()}:::{err.__class__}:::{e}")
             bot.stop_polling()
 
             time.sleep(5)
